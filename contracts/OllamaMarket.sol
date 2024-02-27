@@ -27,10 +27,14 @@ contract OllamaMarket is
         string modelName;
         string prompt;
         string request_context;
+        uint64 timestamp;
+        string response;
+        string response_context;
+        bytes sig;
     }
 
     uint256 requestCount;
-    mapping(uint256 => Request) requests;
+    mapping(uint256 => Request) public requests;
 
     event VerifierUpdated(address indexed verifier);
     event RequestCreated(uint256 indexed id, string modelName, string prompt, string request_context);
@@ -91,11 +95,12 @@ contract OllamaMarket is
         string memory modelName,
         string memory prompt,
         string memory request_context
-    ) public {
+    ) public returns(uint256) {
         requestCount++;
-        requests[requestCount] = Request(modelName, prompt, request_context);
+        requests[requestCount] = Request(modelName, prompt, request_context, 0, "", "", "");
 
         emit RequestCreated(requestCount, modelName, prompt, request_context);
+        return requestCount;
     }
 
     function serveRequest(
@@ -105,9 +110,13 @@ contract OllamaMarket is
         string memory response_context,
         bytes memory sig
     ) public {
-        Request memory request = requests[requestId];
+        Request storage request = requests[requestId];
+        require(request.timestamp == 0, "response already received");
         verifier.verifyResult(timestamp, request.modelName, request.prompt, request.request_context, response, response_context, sig);
-        delete requests[requestId];
+        request.timestamp = timestamp;
+        request.response = response;
+        request.response_context = response_context;
+        request.sig = sig;
         emit RequestCompleted(requestId, timestamp, response, response_context, sig);
     }
 }
