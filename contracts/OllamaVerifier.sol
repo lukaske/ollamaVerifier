@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
@@ -73,7 +71,6 @@ contract OllamaVerifier is
     //-------------------------------- Overrides end --------------------------------//
 
     function verifyResult(
-        bytes32 imageId,
         uint64 timestamp,
         string memory modelName,
         string memory prompt,
@@ -97,8 +94,7 @@ contract OllamaVerifier is
         ));
 
         address signer = ECDSAUpgradeable.recover(digest, sig);
-        console.log(signer);
 
-        require(_allowOnlyVerified(signer, imageId), "Signer not verified");
+        _allowOnlyVerified(signer);
     }
 }

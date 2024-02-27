@@ -24,7 +24,6 @@ contract OllamaMarket is
     OllamaVerifier verifier;
 
     struct Request {
-        bytes32 imageId;
         string modelName;
         string prompt;
         string request_context;
@@ -34,7 +33,7 @@ contract OllamaMarket is
     mapping(uint256 => Request) requests;
 
     event VerifierUpdated(address indexed verifier);
-    event RequestCreated(uint256 indexed id, bytes32 indexed imageId, string modelName, string prompt, string request_context);
+    event RequestCreated(uint256 indexed id, string modelName, string prompt, string request_context);
     event RequestCompleted(uint256 indexed id, uint256 timestamp, string response, string response_context, bytes sig);
     
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -89,16 +88,14 @@ contract OllamaMarket is
     }
 
     function createRequest(
-        bytes32 imageId,
         string memory modelName,
         string memory prompt,
         string memory request_context
     ) public {
-        require(imageId != bytes32(0), "Invalid imageId");
         requestCount++;
-        requests[requestCount] = Request(imageId, modelName, prompt, request_context);
+        requests[requestCount] = Request(modelName, prompt, request_context);
 
-        emit RequestCreated(requestCount, imageId, modelName, prompt, request_context);
+        emit RequestCreated(requestCount, modelName, prompt, request_context);
     }
 
     function serveRequest(
@@ -109,8 +106,7 @@ contract OllamaMarket is
         bytes memory sig
     ) public {
         Request memory request = requests[requestId];
-        require(request.imageId != bytes32(0), "Request isn't available");
-        verifier.verifyResult(request.imageId, timestamp, request.modelName, request.prompt, request.request_context, response, response_context, sig);
+        verifier.verifyResult(timestamp, request.modelName, request.prompt, request.request_context, response, response_context, sig);
         delete requests[requestId];
         emit RequestCompleted(requestId, timestamp, response, response_context, sig);
     }

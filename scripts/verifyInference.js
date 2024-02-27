@@ -3,7 +3,7 @@ const axios = require("axios");
 
 const OllamaVerifierAddress = "";
 
-async function verifyInference(prompt, model, imageId, OllamaVerifierAddress) {
+async function verifyInference(prompt, model, OllamaVerifierAddress) {
     const ollamaVerifier = await ethers.getContractAt("OllamaVerifier", OllamaVerifierAddress);
 
      const resp = await axios.post("http://13.126.159.176:5000/api/generate", {
@@ -16,7 +16,6 @@ async function verifyInference(prompt, model, imageId, OllamaVerifierAddress) {
 
     // response can be verified using the signature which is extracted from the response headers
     await ollamaVerifier.verifyResult(
-        imageId, // Image Id of the enclave image of model
         parseInt(resp.headers["x-oyster-timestamp"]), // time at which inference was done
         model, // name of the model
         prompt, // prompt used for inference
@@ -27,4 +26,4 @@ async function verifyInference(prompt, model, imageId, OllamaVerifierAddress) {
     );   
 }
 
-verifyInference("What is Ethereum", "tinyllama", ethers.ZeroHash, OllamaVerifierAddress)
+verifyInference("What is Ethereum", "tinyllama", OllamaVerifierAddress)

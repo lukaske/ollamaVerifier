@@ -10,8 +10,8 @@ async function forwarder() {
     const provider = new ethers.WebSocketProvider(wssProviderUrl);
     const [forwarder] = await ethers.getSigners();
     const market = new ethers.Contract(OllamaMarketAddress, abi, forwarder.connect(provider));
-    market.addListener("RequestCreated", async (requestId, imageId, modelName, prompt, request_context) => {
-        console.log(requestId, imageId, modelName, prompt, request_context);
+    market.addListener("RequestCreated", async (requestId, modelName, prompt, request_context) => {
+        console.log(requestId, modelName, prompt, request_context);
         const resp = await axios.post("http://52.66.83.182:5000/api/generate", {
             "model": modelName,
             "prompt": prompt
