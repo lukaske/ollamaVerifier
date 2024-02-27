@@ -27,6 +27,16 @@ async function main() {
   console.log(`Ollama market deployed at ${ollamaMarket.target}`);
 }
 
+async function verify() {
+  await hre.run("verify:verify", {
+    address: "0x54900258f0C9Cda0FBA25C4A0607678c45E4D220",
+    constructorArguments: [
+      "0xDEb1326Bf357FA5BfBf0632dF7b6E338d817500D",
+      3600000
+    ],
+  });
+}
+
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
