@@ -1,14 +1,14 @@
-const {ethers} = require("hardhat");
+const { ethers } = require("ethers");
 const axios = require("axios");
 
-const {abi} = require("../artifacts/contracts/OllamaMarket.sol/OllamaMarket.json");
+const { abi } = require("../artifacts/contracts/OllamaMarket.sol/OllamaMarket.json");
 
-const OllamaMarketAddress = "0xca439C648dE7347A771A5d5E8993cE4089511a26";
-const wssProviderUrl = "ws://localhost:8545";
+const OllamaMarketAddress = "0x5343579EB412f0F6CFb57c4E4f8567c3c5896076";
+const wssProviderUrl = "wss://polygon-mainnet.g.alchemy.com/v2/KpvbfBf_ghrsFRo-t3VJfW7YF-xTl4yQ";
 
 async function forwarder() {
     const provider = new ethers.WebSocketProvider(wssProviderUrl);
-    const [forwarder] = await ethers.getSigners();
+    const forwarder = new ethers.Wallet("60dde87f762cf791c5e79054972c557310757b114823e6561409903449fbfc24")
     const market = new ethers.Contract(OllamaMarketAddress, abi, forwarder.connect(provider));
     market.addListener("RequestCreated", async (requestId, modelName, prompt, request_context) => {
         console.log(requestId, modelName, prompt, request_context);

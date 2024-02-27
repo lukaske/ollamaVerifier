@@ -8,7 +8,8 @@ module.exports = {
   networks: {
     hardhat: {},
     local: {
-      url: "http://127.0.0.1:8545"
+      url: "http://127.0.0.1:1248",
+      timeout: 100_000,
     },
     polygon: {
       url: "https://polygon.llamarpc.com"

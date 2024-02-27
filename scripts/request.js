@@ -1,12 +1,12 @@
-const {ethers} = require("hardhat");
+const { ethers } = require("hardhat");
 const axios = require("axios");
 
-const OllamaMarketAddress = "0xca439C648dE7347A771A5d5E8993cE4089511a26";
+const OllamaMarketAddress = "0x5343579EB412f0F6CFb57c4E4f8567c3c5896076";
 
 async function sendRequest() {
     const market = await ethers.getContractAt("OllamaMarket", OllamaMarketAddress);
 
-    await market.createRequest(ethers.keccak256(Buffer.from("123")), "llama2", "What is Ethereum", "[]")
+    await market.createRequest("llama2", "What is Ethereum", "[]")
 }
 
 sendRequest();
