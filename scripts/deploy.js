@@ -21,6 +21,10 @@ async function main() {
   ], { kind: "uups", constructorArgs: ["0xDEb1326Bf357FA5BfBf0632dF7b6E338d817500D", 10000000] });
 
   console.log(`Ollama verifier deployed at ${ollamaVerifier.target}`);
+
+  const OllamaMarket = await ethers.getContractFactory("OllamaMarket");
+  const ollamaMarket = await upgrades.deployProxy(OllamaMarket, [ollamaVerifier.target, owner.address]);
+  console.log(`Ollama market deployed at ${ollamaMarket.target}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
