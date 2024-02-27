@@ -10,40 +10,47 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {AttestationAutherUpgradeable, IAttestationVerifier} from "./lib/AttestationVerifierAuther.sol";
+import {OllamaVerifier} from "./OllamaVerifier.sol";
 
-contract OllamaVerifier is
+contract OllamaMarket is 
     Initializable, // initializer
     ContextUpgradeable, // _msgSender, _msgData
     ERC165Upgradeable, // supportsInterface
     AccessControlUpgradeable, // RBAC
     AccessControlEnumerableUpgradeable, // RBAC enumeration
     ERC1967UpgradeUpgradeable, // delegate slots, proxy admin, private upgrade
-    UUPSUpgradeable, // public upgrade
-    AttestationAutherUpgradeable 
+    UUPSUpgradeable // public upgrade 
 {
+    OllamaVerifier verifier;
+
+    struct Request {
+        bytes32 imageId;
+        string modelName;
+        string prompt;
+        string request_context;
+    }
+
+    uint256 requestCount;
+    mapping(uint256 => Request) requests;
+
+    event VerifierUpdated(address indexed verifier);
+    event RequestCreated(uint256 indexed id, bytes32 indexed imageId, string modelName, string prompt, string request_context);
+    event RequestCompleted(uint256 indexed id, uint256 timestamp, string response, string response_context, bytes sig);
+    
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(IAttestationVerifier _attestationVerifier, uint256 _maxAge) AttestationAutherUpgradeable(
-        _attestationVerifier, 
-        _maxAge
-    ) initializer {}
+    constructor() initializer {}
 
-    function initialize(
-        EnclaveImage[] memory _whitelistedImages,
-        address _admin
-    ) external initializer {
-        require(_whitelistedImages.length != 0, "AV:I-At least one image must be provided");
-        require(_admin != address(0), "AV:I-At least one admin necessary");
-
+    function initialize(address _verifier, address _admin) initializer public {
         __Context_init_unchained();
         __ERC165_init_unchained();
         __AccessControl_init_unchained();
         __AccessControlEnumerable_init_unchained();
         __ERC1967Upgrade_init_unchained();
         __UUPSUpgradeable_init_unchained();
-        __AttestationAuther_init_unchained(_whitelistedImages);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
+
+        _updateVerifier(_verifier);
     }
 
     modifier onlyAdmin() {
@@ -72,33 +79,39 @@ contract OllamaVerifier is
 
     //-------------------------------- Overrides end --------------------------------//
 
-    function verifyResult(
+    function updateVerifier(address _verifier) public onlyAdmin {
+        _updateVerifier(_verifier);
+    }
+
+    function _updateVerifier(address _verifier) internal {
+        verifier = OllamaVerifier(_verifier);
+        emit VerifierUpdated(_verifier);
+    }
+
+    function createRequest(
         bytes32 imageId,
-        uint64 timestamp,
         string memory modelName,
         string memory prompt,
-        string memory request_context,
+        string memory request_context
+    ) public {
+        require(imageId != bytes32(0), "Invalid imageId");
+        requestCount++;
+        requests[requestCount] = Request(imageId, modelName, prompt, request_context);
+
+        emit RequestCreated(requestCount, imageId, modelName, prompt, request_context);
+    }
+
+    function serveRequest(
+        uint256 requestId,
+        uint64 timestamp,
         string memory response,
         string memory response_context,
         bytes memory sig
-    ) public view {
-        bytes32 digest = keccak256(abi.encodePacked(
-            "|oyster-hasher|",
-            "|timestamp|",
-            timestamp,
-            "|ollama_signature_parameters|",
-            abi.encode(
-                modelName,
-                prompt,
-                request_context,
-                response,
-                response_context
-            )
-        ));
-
-        address signer = ECDSAUpgradeable.recover(digest, sig);
-        console.log(signer);
-
-        require(_allowOnlyVerified(signer, imageId), "Signer not verified");
+    ) public {
+        Request memory request = requests[requestId];
+        require(request.imageId != bytes32(0), "Request isn't available");
+        verifier.verifyResult(request.imageId, timestamp, request.modelName, request.prompt, request.request_context, response, response_context, sig);
+        delete requests[requestId];
+        emit RequestCompleted(requestId, timestamp, response, response_context, sig);
     }
 }

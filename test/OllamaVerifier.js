@@ -27,15 +27,17 @@ describe("Ollama Verifier", function () {
     }
 
     it("test sig", async function() {
+        this.timeout(40000000);
         const ollamaVerifier = await deployOllamaVerifierFixture();
 
         const prompt = "What is ethereum";
-        const model = "tinyllama";
+        const model = "llama2";
 
-        const resp = await axios.post("http://13.126.159.176:5000/api/generate", {
+        const resp = await axios.post("http://52.66.83.182:5000/api/generate", {
             "model": model,
             "prompt": prompt
         });
+        console.log(resp.data)
 
         await ollamaVerifier.verifyResult(
             ethers.ZeroHash,
