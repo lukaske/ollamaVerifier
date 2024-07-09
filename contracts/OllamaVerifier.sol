@@ -70,6 +70,11 @@ contract OllamaVerifier is
 
     //-------------------------------- Overrides end --------------------------------//
 
+    function whitelistEnclaveKey(bytes memory enclavePubKey, bytes32 imageId) external onlyAdmin {
+	_whitelistEnclaveKey(enclavePubKey, imageId);
+    }
+
+
     function verifyResult(
         uint64 timestamp,
         string memory modelName,
