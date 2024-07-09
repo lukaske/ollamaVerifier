@@ -74,6 +74,9 @@ contract OllamaVerifier is
 	_whitelistEnclaveKey(enclavePubKey, imageId);
     }
 
+    event BountyClaimed(address indexed claimant, string message, string bounty_keyword);
+    uint256 public constant rewardAmount = 0.01 ether;
+    string public constant bounty_keyword = "ethereum";
 
     function verifyResult(
         uint64 timestamp,
@@ -83,7 +86,7 @@ contract OllamaVerifier is
         string memory response,
         string memory response_context,
         bytes memory sig
-    ) public view {
+    ) public {
         bytes32 digest = keccak256(abi.encodePacked(
             "|oyster-hasher|",
             "|timestamp|",
@@ -101,5 +104,34 @@ contract OllamaVerifier is
         address signer = ECDSAUpgradeable.recover(digest, sig);
 
         _allowOnlyVerified(signer);
+
+        require(contains(bounty_keyword, response), "Response does not contain the required string for bounty");
+        
+        // Temporary disable bounty
+        //require(address(this).balance >= rewardAmount, "Insufficient contract balance");
+        //payable(msg.sender).transfer(rewardAmount);
+
+        emit BountyClaimed(msg.sender, "Bounty successfully claimed for keyword: ", bounty_keyword);
     }
+
+        function contains(string memory what, string memory where) internal pure returns (bool) {
+        bytes memory whatBytes = bytes(what);
+        bytes memory whereBytes = bytes(where);
+
+        bool found = false;
+        for (uint i = 0; i <= whereBytes.length - whatBytes.length; i++) {
+            bool flag = true;
+            for (uint j = 0; j < whatBytes.length; j++)
+                if (whereBytes[i + j] != whatBytes[j]) {
+                    flag = false;
+                    break;
+                }
+            if (flag) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
+
 }

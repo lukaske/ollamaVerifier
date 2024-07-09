@@ -1,7 +1,7 @@
 const {ethers} = require("hardhat");
 const axios = require("axios");
 
-const OllamaVerifierAddress = "0x205EAcEa1F138EFE9f707d2C6C1296b6ceBEd085";
+const OllamaVerifierAddress = "0x1B5c3f46A28bC690abF55Bb4d29bd6496d060d66";
 
 async function verifyInference(prompt, model, OllamaVerifierAddress) {
     const ollamaVerifier = await ethers.getContractAt("OllamaVerifier", OllamaVerifierAddress);
@@ -31,4 +31,4 @@ async function verifyInference(prompt, model, OllamaVerifierAddress) {
     console.log(res);
 }
 
-verifyInference("What is Ethereum in 5 words", "llama2", OllamaVerifierAddress)
+verifyInference("Use the word ethereum in a sentence, all output must be lowercase", "llama2", OllamaVerifierAddress)
